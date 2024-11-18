@@ -1,13 +1,15 @@
 """
-routes_login.py
+routes_auth.py
 
-This module defines a Flask route for user authentication, allowing users to
-log in and receive a JSON Web Token (JWT) for authorization in protected
-endpoints.
+This module defines Flask routes for user authentication, including login 
+and logout functionality, using JWT for session management. It handles 
+user authentication and session termination in a secure manner.
 
 Classes:
     Login (Resource): Handles user authentication by verifying credentials
         and issuing a JWT token upon successful login.
+    Logout (Resource): Handles user logout by clearing session cookies to 
+        invalidate the current session.
 
 Attributes:
     login_bp (Blueprint): Flask blueprint for authentication routes.
@@ -20,9 +22,9 @@ Models:
         email and password, required for user authentication.
 """
 
-from flask import Blueprint, current_app, request, abort
+from flask import Blueprint, current_app, request, abort, jsonify
 from flask_restx import Namespace, Resource, fields
-from flask_jwt_extended import create_access_token  # type: ignore
+from flask_jwt_extended import create_access_token, jwt_required  # type: ignore
 
 
 login_bp = Blueprint('login', __name__)
@@ -34,7 +36,7 @@ login_model = api.model('Login', {
 })
 
 
-@api.route('/')
+@api.route('/login')
 class Login(Resource):
     """Resource for authenticating users and generating a JWT token for authorization."""
 
@@ -71,4 +73,38 @@ class Login(Resource):
         except ValueError as e:
             abort(400, str(e))
 
-        return {'access_token': access_token}, 200
+        return {
+            'access_token': access_token,
+            'user_id': str(user.id)
+        }, 200
+
+@api.route('/logout')
+class Logout(Resource):
+    """
+    Endpoint to handle user logout.
+
+    This endpoint allows users to log out by invalidating their current session. 
+    It clears the JWT token and user ID from the client's cookies, effectively 
+    ending the user's session.
+
+    Methods:
+        post: Handles the logout request and clears the session cookies.
+
+    Returns:
+        Response: A JSON response with a success message and cleared cookies.
+    """
+    @jwt_required()
+    def post(self):
+        """
+        Handle POST request to log out the user.
+
+        This method removes the JWT token and user ID from the cookies by setting 
+        them to an empty string and expiring them immediately.
+
+        Returns:
+            Response: A JSON response with a message indicating successful logout.
+        """
+        response = jsonify({"msg": "Logout successful"})
+        response.set_cookie('jwt_token', '', expires=0)
+        response.set_cookie('user_id', '', expires=0)
+        return response

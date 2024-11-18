@@ -70,7 +70,7 @@ class Review(BaseModel):
             if self.rating < 1 or self.rating > 5:
                 raise ValueError("rating must be between 1 and 5.")
 
-            if not (0 < len(self.text) <= 50):
+            if not (0 < len(self.text) <= 1024):
                 raise ValueError("text must not be empty and should be less than 50 characters.")
             
             if not (0 < len(self.place_name) <= 50):
