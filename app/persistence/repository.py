@@ -91,7 +91,7 @@ class InFileRepository(InMemoryRepository):
 
     def __init__(self, file_name):
 
-        data_dir = "/root/Holbertonschool_New_HBnB_Part2_Database/app/data"
+        data_dir = "/root/Holbertonschool_New_HBnB_Part3_FronEnd/app/data"
         os.makedirs(data_dir, exist_ok=True)
 
         self.path = os.path.join(data_dir, file_name)
